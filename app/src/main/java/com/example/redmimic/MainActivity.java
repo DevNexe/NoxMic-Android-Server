@@ -17,10 +17,9 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
-import org.nanohttpd.protocols.http.IHTTPSession;
-import org.nanohttpd.protocols.http.NanoHTTPD;
-import org.nanohttpd.protocols.http.response.Response;
-import org.nanohttpd.protocols.http.response.Status;
+// ИМПОРТЫ ДЛЯ NANOHTTPD 2.3.1
+import fi.iki.elonen.NanoHTTPD;
+import fi.iki.elonen.NanoHTTPD.Response.Status;
 
 import java.io.InputStream;
 import java.io.PipedInputStream;
@@ -42,7 +41,6 @@ public class MainActivity extends AppCompatActivity {
     private PipedOutputStream pipedOutputStream;
 
     private TextView tvStatus;
-    private TextView tvIp;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,7 +48,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         tvStatus = findViewById(R.id.tvStatus);
-        tvIp = findViewById(R.id.tvStatus); // Используем то же поле для вывода IP
 
         bufferSize = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT);
 
@@ -83,9 +80,9 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        public Response handle(IHTTPSession session) {
+        public Response serve(IHTTPSession session) {
             if (session.getUri().equals("/audio.wav")) {
-                stopRecording(); // Остановить предыдущую запись, если была
+                stopRecording(); 
                 
                 try {
                     PipedInputStream inputStream = new PipedInputStream();
@@ -93,12 +90,13 @@ public class MainActivity extends AppCompatActivity {
                     
                     startRecording();
                     
-                    return Response.newChunkedResponse(Status.OK, "audio/wav", inputStream);
+                    // В 2.3.1 используется этот метод для стриминга
+                    return newFixedLengthResponse(Status.OK, "audio/wav", inputStream, -1);
                 } catch (Exception e) {
-                    return Response.newFixedLengthResponse(Status.INTERNAL_ERROR, NanoHTTPD.MIME_PLAINTEXT, "Error: " + e.getMessage());
+                    return newFixedLengthResponse(Status.INTERNAL_ERROR, NanoHTTPD.MIME_PLAINTEXT, "Error: " + e.getMessage());
                 }
             }
-            return Response.newFixedLengthResponse(Status.NOT_FOUND, NanoHTTPD.MIME_PLAINTEXT, "Not Found");
+            return newFixedLengthResponse(Status.NOT_FOUND, NanoHTTPD.MIME_PLAINTEXT, "Not Found");
         }
     }
 
