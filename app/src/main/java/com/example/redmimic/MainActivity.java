@@ -41,21 +41,31 @@ public class MainActivity extends AppCompatActivity {
     private PipedOutputStream pipedOutputStream;
 
     private TextView tvStatus;
-
+    private android.widget.Button btnStart;
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+    
         tvStatus = findViewById(R.id.tvStatus);
-
+        btnStart = findViewById(R.id.btnStart); // Убедись, что в XML id именно btnStart
+    
         bufferSize = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT);
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, REQUEST_RECORD_AUDIO_PERMISSION);
-        } else {
-            startAudioServer();
-        }
+    
+        btnStart.setOnClickListener(v -> {
+            // Проверяем разрешения при нажатии
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, REQUEST_RECORD_AUDIO_PERMISSION);
+            } else {
+                // Если разрешения есть — запускаем
+                if (server == null || !server.isAlive()) {
+                    startAudioServer();
+                    btnStart.setText("Streaming Active");
+                    btnStart.setEnabled(false); // Чтобы не нажимали дважды
+                }
+            }
+        });
     }
 
     private void startAudioServer() {
