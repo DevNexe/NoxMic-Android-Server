@@ -21,7 +21,6 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.res.ResourcesCompat;
@@ -67,13 +66,16 @@ public class MainActivity extends AppCompatActivity {
         btnToggle = findViewById(R.id.btnToggle);
         btnSettings = findViewById(R.id.btnSettings);
 
+        btnToggle.setTransformationMethod(null);
+        btnSettings.setTransformationMethod(null);
+
         try {
             Typeface iconFont = ResourcesCompat.getFont(this, R.font.material_symbols);
             btnSettings.setTypeface(iconFont);
         } catch (Exception e) { e.printStackTrace(); }
 
         if (tvIp != null) tvIp.setText("NoxMic");
-        tvStatus.setText("READY TO START");
+        tvStatus.setText("");
 
         bufferSize = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT);
 
@@ -92,18 +94,16 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // Метод для динамического обновления UI из любого потока
-    private void updateUiState(boolean activeStream) {
+    private void updateUiState(boolean active) {
         runOnUiThread(() -> {
-            if (activeStream) {
-                btnToggle.setText("STOP STREAMING");
+            if (active) {
+                btnToggle.setText("Stop streaming");
                 btnToggle.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#A11D1D")));
                 updateStatusLabel();
             } else {
-                btnToggle.setText("START STREAMING");
+                btnToggle.setText("Start streaming");
                 btnToggle.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#0078D4")));
-                if (isServerRunning) updateStatusLabel();
-                else tvStatus.setText("OFFLINE");
+                tvStatus.setText("");
             }
         });
     }
@@ -114,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
             server = new AudioServer(currentPort);
             server.start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
             isServerRunning = true;
-            updateUiState(false); // Сервер запущен, но стрима пока нет
+            updateUiState(true);
         } catch (Exception e) {
             e.printStackTrace();
             Toast.makeText(this, "Error starting server", Toast.LENGTH_SHORT).show();
@@ -126,14 +126,13 @@ public class MainActivity extends AppCompatActivity {
         stopRecording();
         if (server != null) server.stop();
         updateUiState(false);
-        tvStatus.setText("READY TO START");
     }
 
     private void updateStatusLabel() {
         WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         int ipAddress = wifiManager.getConnectionInfo().getIpAddress();
         if (ipAddress == 0) {
-            tvStatus.setText("No WI-FI connection");
+            tvStatus.setText("No Wi-Fi connection");
             return;
         }
         String ip = Formatter.formatIpAddress(ipAddress);
@@ -146,19 +145,17 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public Response serve(IHTTPSession session) {
             if ("/audio.wav".equals(session.getUri())) {
-                stopRecording(); // Сброс предыдущей сессии, если была
+                stopRecording();
                 try {
                     PipedInputStream inputStream = new PipedInputStream(bufferSize * 10);
                     pipedOutputStream = new PipedOutputStream(inputStream);
                     
                     startRecording();
-                    updateUiState(true); // Динамически меняем кнопку на красную
 
                     Response res = newChunkedResponse(Response.Status.OK, "audio/wav", inputStream);
                     res.addHeader("Connection", "close"); 
                     return res;
                 } catch (Exception e) {
-                    updateUiState(false);
                     return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, NanoHTTPD.MIME_PLAINTEXT, e.getMessage());
                 }
             }
@@ -184,9 +181,11 @@ public class MainActivity extends AppCompatActivity {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                updateUiState(false);
             } finally {
-                stopRecording();
+                if (audioRecord != null) {
+                    try { audioRecord.stop(); audioRecord.release(); } catch (Exception ignored) {}
+                    audioRecord = null;
+                }
             }
         });
         recordingThread.start();
@@ -194,8 +193,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void stopRecording() {
         isRecording = false;
-        updateUiState(false); // Возвращаем кнопку в синий цвет
-
         if (audioRecord != null) {
             try {
                 audioRecord.stop();
@@ -215,6 +212,7 @@ public class MainActivity extends AppCompatActivity {
         View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_settings, null);
         EditText etPort = dialogView.findViewById(R.id.etPort);
         Button btnSave = dialogView.findViewById(R.id.btnSaveSettings);
+        btnSave.setTransformationMethod(null);
         
         etPort.setText(String.valueOf(currentPort));
         AlertDialog dialog = new AlertDialog.Builder(this).setView(dialogView).create();
