@@ -1,5 +1,5 @@
 @echo off
-echo === Redmi Mic APK Builder for Windows ===
+echo === NoxMic APK Builder for Windows ===
 
 where java >nul 2>nul
 if %errorlevel% neq 0 (
@@ -16,7 +16,7 @@ call gradlew.bat assembleDebug
 
 if %errorlevel% equ 0 (
     echo === УСПЕХ! ===
-    echo Ваш APK файл находится здесь: app\build\outputs\apk\debug\app-debug.apk
+    echo Ваш APK файл находится здесь: app\build\outputs\apk\debug\NoxMic.apk
 ) else (
     echo === ОШИБКА СБОРКИ ===
     echo Пожалуйста, убедитесь, что у вас установлен Android SDK.

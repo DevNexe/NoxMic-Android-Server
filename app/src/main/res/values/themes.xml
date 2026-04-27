@@ -1,0 +1,14 @@
+<resources>
+    <style name="Theme.RedmiMic" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        </style>
+
+    <style name="NoxButtonStyle" parent="Widget.MaterialComponents.Button">
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="cornerRadius">10dp</item>
+        <item name="backgroundTint">@color/accent_blue</item>
+        <item name="android:padding">14dp</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+</resources>

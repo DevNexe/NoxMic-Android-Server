@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "=== Redmi Mic APK Builder ==="
+echo "=== NoxMic APK Builder ==="
 
 # Проверка наличия JDK
 if ! type -p java > /dev/null; then
@@ -23,7 +23,7 @@ echo "2. Сборка отладочного APK (Debug)..."
 
 if [ $? -eq 0 ]; then
     echo "=== УСПЕХ! ==="
-    echo "Ваш APK файл находится здесь: app/build/outputs/apk/debug/app-debug.apk"
+    echo "Ваш APK файл находится здесь: app/build/outputs/apk/debug/NoxMic.apk"
 else
     echo "=== ОШИБКА СБОРКИ ==="
     echo "Возможно, не хватает компонентов Android SDK. Попробуйте открыть проект в Android Studio для автоматической докачки библиотек."
