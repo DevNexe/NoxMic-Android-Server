@@ -156,19 +156,20 @@ public class MainActivity extends AppCompatActivity {
         public AudioServer(int port) { super(port); }
 
         @Override
-        public Response handle(IHTTPSession session) {
+        public Response serve(IHTTPSession session) {
             if (session.getUri().equals("/audio.wav")) {
                 stopRecording();
                 try {
                     PipedInputStream inputStream = new PipedInputStream();
                     pipedOutputStream = new PipedOutputStream(inputStream);
                     startRecording();
-                    return Response.newChunkedResponse(Status.OK, "audio/wav", inputStream);
+                    
+                    return newChunkedResponse(Response.Status.OK, "audio/wav", inputStream);
                 } catch (Exception e) {
-                    return Response.newFixedLengthResponse(Status.INTERNAL_ERROR, NanoHTTPD.MIME_PLAINTEXT, e.getMessage());
+                    return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, NanoHTTPD.MIME_PLAINTEXT, e.getMessage());
                 }
             }
-            return Response.newFixedLengthResponse(Status.NOT_FOUND, NanoHTTPD.MIME_PLAINTEXT, "Not Found");
+            return newFixedLengthResponse(Response.Status.NOT_FOUND, NanoHTTPD.MIME_PLAINTEXT, "Not Found");
         }
     }
 
