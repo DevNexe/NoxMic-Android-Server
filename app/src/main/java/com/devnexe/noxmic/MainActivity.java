@@ -157,14 +157,17 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public Response serve(IHTTPSession session) {
-            if (session.getUri().equals("/audio.wav")) {
+            if ("/audio.wav".equals(session.getUri())) {
                 stopRecording();
                 try {
-                    PipedInputStream inputStream = new PipedInputStream();
+                    PipedInputStream inputStream = new PipedInputStream(bufferSize * 10);
                     pipedOutputStream = new PipedOutputStream(inputStream);
-                    startRecording();
                     
-                    return newChunkedResponse(Response.Status.OK, "audio/wav", inputStream);
+                    startRecording();
+
+                    Response res = newChunkedResponse(Response.Status.OK, "audio/wav", inputStream);
+                    res.addHeader("Connection", "close"); 
+                    return res;
                 } catch (Exception e) {
                     return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, NanoHTTPD.MIME_PLAINTEXT, e.getMessage());
                 }
